@@ -1,15 +1,14 @@
 Usage:
 ======
 
-DScmd -h                       Print this help text and exit
-DScmd -i <file>                Print media infos and exit
-DScmd -lf                      List Filters: list all registered DirectShow filters (CLSID and name) and exit
-DScmd -lc <clsid>              List Category: list registered DirectShow filters of specified filter category and exit
-DScmd <file>                   Play media file with system defaults
-
-DScmd -f <file> <options>      Load a media file or media URL, render with default graph
-DScmd -g <graph> <options>     Create specified DirectShow filter graph (see details below)
-DScmd -grf <file> <options>    Load a GRF file
+DScmd -h                         Print this help text and exit
+DScmd -i <file>                  Print media infos and exit
+DScmd -lf                        List Filters: list all registered DirectShow filters (CLSID and name) and exit
+DScmd -lc <clsid>                List Category: list registered DirectShow filters of specified filter category and exit
+DScmd <file>                     Play media file with system defaults
+DScmd -f <file> <options>        Play media file with system defaults, using specified options
+DScmd -g <graph> <options>       Create and play specified DirectShow filter graph (see details below)
+DScmd -grf <file> <options>      Load and play a GRF file
 
 
 Options:
