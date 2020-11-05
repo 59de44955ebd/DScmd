@@ -49,7 +49,8 @@ are optional. <connect list> can also be empty, i.e. you can use <filter list>!!
 
 Example (note: actually a single line, "^" only works in a batch script):
 
--graph {B98D13E7-55DB-4385-A33D-09FD1BA26338}=filters\LAVSplitter.ax,;src=big_buck_bunny.mp4^
+dscmd -g ^
+{B98D13E7-55DB-4385-A33D-09FD1BA26338}=filters\LAVSplitter.ax,;src=big_buck_bunny.mp4^
 {EE30215D-164F-4A92-A4EB-9D4C13390F9F}=filters\LAVVideo.ax,^
 {51B4ABF3-748F-4E3B-A276-C828330E926A},^
 {E8E73B6B-4CB3-44A4-BE99-4F7BCB96E491}=filters\LAVAudio.ax!^
