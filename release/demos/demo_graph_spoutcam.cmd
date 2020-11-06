@@ -10,7 +10,7 @@ echo Enter q or ESC, or close the video window to quit.
 echo.
 
 :: import CLSID constants
-call __clsid.inc.cmd
+call ..\__clsid.inc.cmd
 
 ..\x64\dscmd -wc "SpoutCam Demo" ^
 -g ^

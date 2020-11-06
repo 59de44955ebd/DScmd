@@ -5,7 +5,7 @@
 cd /d "%~dp0"
 
 :: import CLSID constants
-call __clsid.inc.cmd
+call ..\__clsid.inc.cmd
 
 echo.
 echo This demo loads and renders the virtual camera/Spout receiver "SpoutCam".
@@ -14,7 +14,7 @@ echo.
 
 ..\x64\dscmd ^
 -g ^
-%CLSID_SpoutCam%=filters\SpoutCam64.ax;dialog,%CLSID_VideoMixingRenderer9%!!0
+%CLSID_SpoutCam%=filters\SpoutCam.ax;dialog,%CLSID_VideoMixingRenderer9%!!0
 
 echo.
 pause

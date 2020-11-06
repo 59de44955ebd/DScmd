@@ -10,7 +10,7 @@ echo If not, you might first run "__register_lav_run_as_admin.cmd" in the "filte
 echo Enter q or ESC, or close the video window to quit.
 echo.
 
-..\x64\dscmd -fs -hc -loop -f assets\bbb_360p_10sec.mp4
+..\x64\dscmd -fs -hc -loop -f ..\assets\bbb_360p_10sec.mp4
 
 echo.
 pause

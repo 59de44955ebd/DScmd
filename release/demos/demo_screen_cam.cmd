@@ -5,7 +5,7 @@
 cd /d "%~dp0"
 
 :: import CLSID constants
-call __clsid.inc.cmd
+call ..\__clsid.inc.cmd
 
 echo.
 echo This demo loads and renders the virtual camera "ScreenCam".

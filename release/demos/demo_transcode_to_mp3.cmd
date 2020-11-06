@@ -5,7 +5,7 @@
 cd /d "%~dp0"
 
 :: import CLSID constants
-call __clsid.inc.cmd
+call ..\__clsid.inc.cmd
 
 echo.
 echo ============================================================
@@ -18,7 +18,7 @@ set PATH=filters;%PATH%
 
 ..\x64\dscmd -p -nw -q ^
 -g ^
-%CLSID_LAVSplitterSource%=filters\LAVSplitter.ax;src=assets\bbb_360p_10sec.mp4,^
+%CLSID_LAVSplitterSource%=filters\LAVSplitter.ax;src=..\assets\bbb_360p_10sec.mp4,^
 %CLSID_LAVAudioDecoder%=filters\LAVAudio.ax,^
 %CLSID_AudioCompressorCategory%="MPEG Layer-3";dialog,^
 %CLSID_Dump%=filters\Dump.dll;dest=output.mp3!^

@@ -5,7 +5,7 @@
 cd /d "%~dp0"
 
 :: import CLSID constants
-call __clsid.inc.cmd
+call ..\__clsid.inc.cmd
 
 echo.
 echo This demo transcodes a sample MP4 file to AVI.
@@ -34,7 +34,7 @@ set PATH=filters;%PATH%
 
 ..\x64\dscmd -p -q -nw ^
 -g ^
-%CLSID_LAVSplitterSource%=filters\LAVSplitter.ax;src=assets\bbb_360p_10sec.mp4,^
+%CLSID_LAVSplitterSource%=filters\LAVSplitter.ax;src=..\assets\bbb_360p_10sec.mp4,^
 %CLSID_LAVVideoDecoder%=filters\LAVVideo.ax,^
 %CLSID_VideoCompressorCategory%="%codec%";qual=1.0,^
 %CLSID_AVIMux%,^

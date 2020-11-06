@@ -11,14 +11,14 @@ echo Enter q or ESC, or close the video window to quit.
 echo.
 
 :: import CLSID constants
-call __clsid.inc.cmd
+call ..\__clsid.inc.cmd
 
 :: make sure that also LAV's DLLs are found
 set PATH=filters;%PATH%
 
 ..\x64\dscmd -wc "Legacy VideoRenderer Demo" ^
 -g ^
-%CLSID_LAVSplitterSource%=filters\LAVSplitter.ax;src=assets\bbb_360p_10sec.mp4,^
+%CLSID_LAVSplitterSource%=filters\LAVSplitter.ax;src=..\assets\bbb_360p_10sec.mp4,^
 %CLSID_LAVVideoDecoder%=filters\LAVVideo.ax,^
 %CLSID_VideoRenderer%,^
 %CLSID_LAVAudioDecoder%=filters\LAVAudio.ax,^

@@ -168,6 +168,7 @@ typedef struct tagVIDEOINFOHEADER2
 
 enum LogLevel
 {
+	logQuiet,
 	logError,
 	logWarning,
 	logInfo

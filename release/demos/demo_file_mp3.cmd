@@ -9,7 +9,7 @@ echo This demo plays a MP3 file at double speed, using the system's default grap
 echo Enter q or ESC to quit
 echo.
 
-..\x64\dscmd -k -nw -rate 2.0 -f assets\test.mp3
+..\x64\dscmd -k -nw -rate 2.0 -f ..\assets\test.mp3
 
 echo.
 pause

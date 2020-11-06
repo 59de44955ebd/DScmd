@@ -11,7 +11,7 @@ echo Hit q or ESC to stop the recording.
 echo.
 
 :: import CLSID constants
-call __clsid.inc.cmd
+call ..\__clsid.inc.cmd
 
 ..\x64\dscmd -k -nw ^
 -g ^

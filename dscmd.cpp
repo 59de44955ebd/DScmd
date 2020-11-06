@@ -30,7 +30,8 @@ enum
 	ERROR_LOAD_GRAPH_FAILED,
 	ERROR_RENDER_FAILED,
 	ERROR_CONNECTING_FILTERS_FAILED,
-	ERROR_RENDER_FILTER_FAILED
+	ERROR_RENDER_FILTER_FAILED,
+	ERROR_ADD_FILTER_FAILED
 };
 
 //LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -407,7 +408,7 @@ void ToggleFullscreen()
 		SetWindowLong(
 			g_hWnd,
 			GWL_STYLE,
-			style | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+			style | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME // WS_TILEDWINDOW
 		);
 		r = g_rect;
 		g_fullscreen = FALSE;
@@ -419,7 +420,7 @@ void ToggleFullscreen()
 		ok = SetWindowLong(
 			g_hWnd,
 			GWL_STYLE,
-			style & ~WS_CAPTION & ~WS_SYSMENU & ~WS_THICKFRAME
+			style & ~WS_CAPTION & ~WS_SYSMENU & ~WS_THICKFRAME // WS_OVERLAPPED
 		);
 		g_fullscreen = TRUE;
 	}
@@ -1673,7 +1674,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 					hr = AddFilterCodec(g_pGraphBuilder, filterGuid, filterParts[1].c_str(), &pFilter);
 					DBGHR("AddFilterCodec");
 					if (FAILED(hr))
+					{
 						Log(logError, "Adding filter failed\n");
+						EXIT(ERROR_ADD_FILTER_FAILED);
+					}
 				}
 
 				else if (
@@ -1684,7 +1688,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 					filterGuid == DMOCATEGORY_VIDEO_EFFECT ||
 					filterGuid == DMOCATEGORY_VIDEO_ENCODER ||
 					filterGuid == DMOCATEGORY_AUDIO_CAPTURE_EFFECT
-				)
+					)
 				{
 					GUID clsid;
 					StringToGuid(filterParts[1].c_str(), &clsid);
@@ -1696,7 +1700,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 					);
 					DBGHR("AddFilterDMO");
 					if (FAILED(hr))
+					{
 						Log(logError, "Adding DMO filter failed\n");
+						EXIT(ERROR_ADD_FILTER_FAILED);
+					}
 				}
 
 				else if (filterParts.size() > 1)
@@ -1704,7 +1711,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 					hr = AddFilterByCLSIDAndPath(g_pGraphBuilder, filterGuid, &pFilter, filterParts[1].c_str(), NULL);
 					DBGHR("AddFilterByCLSIDAndPath");
 					if (FAILED(hr))
+					{
 						Log(logError, "Loading filter from DLL failed\n");
+						EXIT(ERROR_ADD_FILTER_FAILED);
+					}
 				}
 
 				else
@@ -1712,16 +1722,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 					hr = AddFilterByCLSID(g_pGraphBuilder, filterGuid, &pFilter);
 					DBGHR("AddFilterByCLSID");
 					if (FAILED(hr))
+					{
 						Log(logError, "Adding filter failed\n");
+						EXIT(ERROR_ADD_FILTER_FAILED);
+					}
 
 					// if AVIMux, use its IMediaSeeking interface instead
-					if (filterGuid == CLSID_AviMux)
-					{
-						SAFE_RELEASE(g_pMediaSeeking);
-
-						hr = pFilter->QueryInterface(IID_IMediaSeeking, (void**)&g_pMediaSeeking);
-						DBGHR("QueryInterface(IID_IMediaSeeking)");
-					}
+					//if (filterGuid == CLSID_AviMux)
+					//{
+					//	SAFE_RELEASE(g_pMediaSeeking);
+					//	hr = pFilter->QueryInterface(IID_IMediaSeeking, (void**)&g_pMediaSeeking);
+					//	DBGHR("QueryInterface(IID_IMediaSeeking)");
+					//}
 				}
 					
 				if (FAILED(hr)) continue; // ???

@@ -9,7 +9,7 @@ echo This demo plays a MIDI file at double speed, using the system's default gra
 echo Enter q or ESC to quit
 echo.
 
-..\x64\dscmd -k -nw -rate 2.0 -f assets\test.mid
+..\x64\dscmd -k -nw -rate 2.0 -f ..\assets\test.mid
 
 echo.
 pause

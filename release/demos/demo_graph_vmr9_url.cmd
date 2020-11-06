@@ -11,7 +11,7 @@ echo Enter q or ESC, or close the video window to quit.
 echo.
 
 :: import CLSID constants
-call __clsid.inc.cmd
+call ..\__clsid.inc.cmd
 
 :: make sure that also LAV's DLLs are found
 set PATH=filters;%PATH%

@@ -11,11 +11,11 @@ echo Enter q or ESC, or close the video window to quit.
 echo.
 
 :: import CLSID constants
-call __clsid.inc.cmd
+call ..\__clsid.inc.cmd
 
 ..\x64\dscmd -wc "Render Audio Demo" ^
 -g ^
-%CLSID_LAVSplitterSource%=filters\LAVSplitter.ax;src=assets\bbb_360p_10sec.mp4,^
+%CLSID_LAVSplitterSource%=filters\LAVSplitter.ax;src=..\assets\bbb_360p_10sec.mp4,^
 %CLSID_LAVVideoDecoder%=filters\LAVVideo.ax,^
 %CLSID_VideoMixingRenderer9%,^
 %CLSID_LAVAudioDecoder%=filters\LAVAudio.ax!^
