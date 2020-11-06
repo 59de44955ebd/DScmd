@@ -13,11 +13,10 @@ echo.
 :: import CLSID constants
 call __clsid.inc.cmd
 
-:: =filters\ScreenCam.dll
 ..\x64\dscmd -k -nw ^
 -g ^
-%CLSID_ScreenCam%,^
-%CLSID_MJPEGCompressor%,^
+%CLSID_ScreenCam%=filters\ScreenCam.dll;dialog,^
+%CLSID_MJPEGCompressor%;qual=1.0,^
 %CLSID_AVIMux%,^
 %CLSID_FileWriter%;dest=capture.avi!^
 0:1,1:2,2:3

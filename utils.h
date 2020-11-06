@@ -14,6 +14,7 @@
 #include <wmcodecdsp.h>
 
 _COM_SMARTPTR_TYPEDEF(IBaseFilter, __uuidof(IBaseFilter));
+_COM_SMARTPTR_TYPEDEF(IPropertyPage, __uuidof(IPropertyPage));
 
 #ifndef SAFE_RELEASE
 #define SAFE_RELEASE(x) if (x) { x->Release(); x = NULL; }
@@ -23,12 +24,12 @@ _COM_SMARTPTR_TYPEDEF(IBaseFilter, __uuidof(IBaseFilter));
 #define CHECK_HR(hr) if (FAILED(hr)) { goto done; }
 #endif
 
-#define DBGS(X) OutputDebugStringA(X)
+//#define DBGS(X) OutputDebugStringA(X)
 
 void GetErrorDesc(HRESULT hr, char *name, char *desc);
 
 //#define DBGHR(X) if(FAILED(hr)){char name[64];char desc[128];GetErrorDesc(hr, name, desc);printf("%s: %ld - %s - %s (Line %ld)\n",X,hr,name,desc,__LINE__);}
-#define DBGHR(X)
+#define DBGHR(_x_) ((void)0)
 
 //######################################
 // Additional Media Subtypes
@@ -138,6 +139,17 @@ DEFINE_GUID(CLSID_LAVVideoDecoder,
 DEFINE_GUID(CLSID_LAVAudioDecoder,
 	0xE8E73B6B, 0x4CB3, 0x44A4, 0xBE, 0x99, 0x4F, 0x7B, 0xCB, 0x96, 0xE4, 0x91);
 
+
+// TMP
+
+// {081E5C27-E182-4DA0-8C3A-5F55D787A2AE}
+DEFINE_GUID(IID_ICamSettings,
+	0x81e5c27, 0xe182, 0x4da0, 0x8c, 0x3a, 0x5f, 0x55, 0xd7, 0x87, 0xa2, 0xae);
+
+// {DE54BC4E-7717-4C9B-AC9A-8209B63F5EAD}
+DEFINE_GUID(CLSID_ScreenCamPropertyPage,
+	0xde54bc4e, 0x7717, 0x4c9b, 0xac, 0x9a, 0x82, 0x9, 0xb6, 0x3f, 0x5e, 0xad);
+
 typedef struct tagVIDEOINFOHEADER2 
 { 
 	RECT rcSource; 
@@ -216,6 +228,12 @@ HRESULT ShowFilterPropertyPages(
 	HWND hWnd = NULL
 );
 
+HRESULT ShowFilterPropertyPageDirect(
+	IBaseFilter *pFilter,
+	const WCHAR *pPath,
+	HWND hWnd = NULL
+);
+
 HRESULT ShowPinPropertyPages(
 	IBaseFilter *pFilter, 
 	HWND hWnd = NULL
@@ -231,6 +249,12 @@ HRESULT AddFilterByCLSID(
 	const GUID& clsid,              // CLSID of the filter to create.
 	IBaseFilter **ppF,              // Receives a pointer to the filter.
 	const WCHAR *wszName = NULL     // A name for the filter (can be NULL).
+);
+
+HRESULT CreateObjectFromPath(
+	const WCHAR * pPath, 
+	REFCLSID clsid, 
+	IUnknown** ppUnk
 );
 
 HRESULT AddFilterByCLSIDAndPath(

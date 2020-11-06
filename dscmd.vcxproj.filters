@@ -38,6 +38,9 @@
     <ClCompile Include="utils.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="olepropframe.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dscmd.rc">

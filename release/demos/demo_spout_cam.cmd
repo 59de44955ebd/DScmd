@@ -14,7 +14,7 @@ echo.
 
 ..\x64\dscmd ^
 -g ^
-%CLSID_SpoutCam%=filters\SpoutCam64.ax,%CLSID_VideoMixingRenderer9%!!0
+%CLSID_SpoutCam%=filters\SpoutCam64.ax;dialog,%CLSID_VideoMixingRenderer9%!!0
 
 echo.
 pause

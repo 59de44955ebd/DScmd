@@ -123,7 +123,7 @@ std::vector<std::wstring> Explode(std::wstring const & s, WCHAR delim)
 HRESULT InitVmr9(IBaseFilter *pVmr9)
 {
 	IVMRFilterConfig9 * pIVMRFilterConfig9;
-	hr = pVmr9->QueryInterface(IID_IVMRFilterConfig9, (void**)&pIVMRFilterConfig9);
+	hr = pVmr9->QueryInterface(IID_IVMRFilterConfig9, reinterpret_cast<void**>(&pIVMRFilterConfig9));
 	DBGHR("QueryInterface(IID_IVMRFilterConfig9)");
 	if (SUCCEEDED(hr))
 	{
@@ -132,7 +132,7 @@ HRESULT InitVmr9(IBaseFilter *pVmr9)
 		pIVMRFilterConfig9->Release();
 	}
 
-	hr = pVmr9->QueryInterface(IID_IVMRWindowlessControl9, (void**)&g_pIVMRWindowlessControl9);
+	hr = pVmr9->QueryInterface(IID_IVMRWindowlessControl9, reinterpret_cast<void**>(&g_pIVMRWindowlessControl9));
 	DBGHR("QueryInterface(IID_IVMRWindowlessControl9)");
 	if (SUCCEEDED(hr))
 	{
@@ -144,7 +144,7 @@ HRESULT InitVmr9(IBaseFilter *pVmr9)
 	}
 
 	IVMRAspectRatioControl9 * pIVMRAspectRatioControl9;
-	hr = pVmr9->QueryInterface(IID_IVMRAspectRatioControl9, (void**)&pIVMRAspectRatioControl9);
+	hr = pVmr9->QueryInterface(IID_IVMRAspectRatioControl9, reinterpret_cast<void**>(&pIVMRAspectRatioControl9));
 	if (SUCCEEDED(hr))
 	{
 		hr = pIVMRAspectRatioControl9->SetAspectRatioMode(VMR_ARMODE_LETTER_BOX);
@@ -160,7 +160,7 @@ HRESULT InitVmr9(IBaseFilter *pVmr9)
 HRESULT InitVmr7(IBaseFilter *pVmr7)
 {
 	IVMRFilterConfig * pIVMRFilterConfig;
-	hr = pVmr7->QueryInterface(IID_IVMRFilterConfig, (void**)&pIVMRFilterConfig);
+	hr = pVmr7->QueryInterface(IID_IVMRFilterConfig, reinterpret_cast<void**>(&pIVMRFilterConfig));
 	DBGHR("QueryInterface(IID_IVMRFilterConfig)");
 	if (SUCCEEDED(hr))
 	{
@@ -169,7 +169,7 @@ HRESULT InitVmr7(IBaseFilter *pVmr7)
 		pIVMRFilterConfig->Release();
 	}
 
-	hr = pVmr7->QueryInterface(IID_IVMRWindowlessControl, (void**)&g_pIVMRWindowlessControl);
+	hr = pVmr7->QueryInterface(IID_IVMRWindowlessControl, reinterpret_cast<void**>(&g_pIVMRWindowlessControl));
 	DBGHR("QueryInterface(IID_IVMRWindowlessControl)");
 	if (SUCCEEDED(hr))
 	{
@@ -181,7 +181,7 @@ HRESULT InitVmr7(IBaseFilter *pVmr7)
 	}
 
 	IVMRAspectRatioControl * pIVMRAspectRatioControl;
-	hr = pVmr7->QueryInterface(IID_IVMRAspectRatioControl, (void**)&pIVMRAspectRatioControl);
+	hr = pVmr7->QueryInterface(IID_IVMRAspectRatioControl, reinterpret_cast<void**>(&pIVMRAspectRatioControl));
 	if (SUCCEEDED(hr))
 	{
 		hr = pIVMRAspectRatioControl->SetAspectRatioMode(VMR_ARMODE_LETTER_BOX);
@@ -225,7 +225,7 @@ HRESULT InitEvr(IBaseFilter *pEvr)
 //######################################
 HRESULT InitLegacyRenderer(IBaseFilter *pLegacyRenderer)
 {
-	hr = g_pGraphBuilder->QueryInterface(IID_IVideoWindow, (void**)&g_pVideoWindow);
+	hr = g_pGraphBuilder->QueryInterface(IID_IVideoWindow, reinterpret_cast<void**>(&g_pVideoWindow));
 	DBGHR("QueryInterface(IID_IVideoWindow)");
 	if (FAILED(hr)) return hr;
 
@@ -245,7 +245,7 @@ HRESULT InitLegacyRenderer(IBaseFilter *pLegacyRenderer)
 
 	// get aspect ratio
 	IBasicVideo2 * pBasicVideo2 = NULL;
-	hr = g_pGraphBuilder->QueryInterface(IID_IBasicVideo2, (void**)&pBasicVideo2);
+	hr = g_pGraphBuilder->QueryInterface(IID_IBasicVideo2, reinterpret_cast<void**>(&pBasicVideo2));
 	DBGHR("QueryInterface(IID_IBasicVideo2)");
 	if (SUCCEEDED(hr))
 	{
@@ -474,7 +474,7 @@ HRESULT GetVideoSize(LONG * pWidth, LONG * pHeight)
 	else if (g_pVideoWindow) // Legacy VideoRenderer
 	{
 		IBasicVideo * pBasicVideo = NULL;
-		hr = g_pGraphBuilder->QueryInterface(IID_IBasicVideo, (void**)&pBasicVideo);
+		hr = g_pGraphBuilder->QueryInterface(IID_IBasicVideo, reinterpret_cast<void**>(&pBasicVideo));
 		if (SUCCEEDED(hr))
 		{
 			LONG vw, vh;
@@ -494,11 +494,18 @@ void PrintMediaInfos()
 {
 	printf("Media Infos:\n");
 
-	IUnknown * pUnk;
-	hr = FindFilterInterface(g_pGraphBuilder, IID_IFileSourceFilter, (void**)&pUnk);
+	//IUnknown * pUnk;
+	//hr = FindFilterInterface(g_pGraphBuilder, IID_IFileSourceFilter, reinterpret_cast<void**>(&pUnk));
+	//if (SUCCEEDED(hr))
+	//{
+	//	IFileSourceFilter *pFileSourceFilter = reinterpret_cast<IFileSourceFilter*>(pUnk);
+
+
+	IFileSourceFilter * pFileSourceFilter;
+	hr = FindFilterInterface(g_pGraphBuilder, IID_IFileSourceFilter, reinterpret_cast<void**>(&pFileSourceFilter));
+	DBGHR("IFileSourceFilter");
 	if (SUCCEEDED(hr))
 	{
-		IFileSourceFilter *pFileSourceFilter = (IFileSourceFilter*)pUnk;
 		AM_MEDIA_TYPE mt;
 		WCHAR *pszFileName;
 		pFileSourceFilter->GetCurFile(
@@ -543,10 +550,16 @@ void PrintMediaInfos()
 		pFileSourceFilter->Release(); //???
 	}
 
-	hr = FindFilterInterface(g_pGraphBuilder, IID_IAMStreamSelect, (void**)&pUnk);
+	//hr = FindFilterInterface(g_pGraphBuilder, IID_IAMStreamSelect, (void**)&pUnk);
+	//if (SUCCEEDED(hr))
+	//{
+	//	IAMStreamSelect *pStreamSelect = (IAMStreamSelect*)pUnk;
+
+	IAMStreamSelect *pStreamSelect;
+	hr = FindFilterInterface(g_pGraphBuilder, IID_IAMStreamSelect, reinterpret_cast<void**>(&pStreamSelect));
+	DBGHR("IAMStreamSelect");
 	if (SUCCEEDED(hr))
 	{
-		IAMStreamSelect *pStreamSelect = (IAMStreamSelect*)pUnk;
 		DWORD dwStreams;
 		hr = pStreamSelect->Count(&dwStreams);
 		printf("  Streams: %ld\n", dwStreams);
@@ -583,6 +596,7 @@ void PrintMediaInfos()
 
 	LONGLONG time;
 	hr = g_pMediaSeeking->GetDuration(&time); // REFERENCE_TIME
+	DBGHR("g_pMediaSeeking->GetDuration");
 	if (SUCCEEDED(hr))
 	{
 		printf("  Duration: %ld ms\n", (long)(time / 10000));
@@ -596,7 +610,8 @@ void PrintMediaInfos()
 	}
 
 	IBasicVideo * pBasicVideo = NULL;
-	hr = g_pGraphBuilder->QueryInterface(IID_IBasicVideo, (void**)&pBasicVideo);
+	hr = g_pGraphBuilder->QueryInterface(IID_IBasicVideo, reinterpret_cast<void**>(&pBasicVideo));
+	DBGHR("IBasicVideo");
 	if (SUCCEEDED(hr))
 	{
 		IEnumFilters *pEnumFilters;
@@ -733,6 +748,7 @@ void HandleKey(UINT_PTR key)
 		break;
 	case VK_ESCAPE:
 	case 'Q':
+		g_pMediaControl->Stop();
 		PostQuitMessage(0);
 		break;
 	case 'H':
@@ -829,7 +845,7 @@ void HandleKey(UINT_PTR key)
 		pEnumFilters->Release();
 	}
 	break;
-	//	LEFT/RIGHT						Seek one frame backwards/forward (if supported by loaded graph)
+	//	LEFT/RIGHT: Seek one frame backwards/forward (if supported by loaded graph)
 	case VK_LEFT:
 		{
 			LONGLONG time;
@@ -872,7 +888,7 @@ void HandleKey(UINT_PTR key)
 	case 'D':
 	{
 		IUnknown * pUnk;
-		hr = FindFilterInterface(g_pGraphBuilder, IID_IDirectVobSub, (void**)&pUnk);
+		hr = FindFilterInterface(g_pGraphBuilder, IID_IDirectVobSub, reinterpret_cast<void**>(&pUnk));
 		if (SUCCEEDED(hr))
 		{
 			IDirectVobSub* pDirectVobSub = (IDirectVobSub*)pUnk;
@@ -925,14 +941,15 @@ void HandleKey(UINT_PTR key)
 			UpdateWindow(g_hWnd);
 
 			//############################################
-			IBaseFilter *pRenderer = 0;
+			IBaseFilter *pRenderer = NULL;
 
 			switch (g_iRenderer)
 			{
 				case 0: // Legacy VideoRenderer
 				{
 					//printf("Legacy VideoRenderer\n");
-					HRESULT hr = CoCreateInstance(CLSID_VideoRenderer, 0, CLSCTX_INPROC_SERVER, IID_IBaseFilter, reinterpret_cast<void**>(&pRenderer));
+					hr = CoCreateInstance(CLSID_VideoRenderer, 0, CLSCTX_INPROC_SERVER, IID_IBaseFilter, reinterpret_cast<void**>(&pRenderer));
+					if (FAILED(hr)) return;
 					hr = g_pGraphBuilder->AddFilter(pRenderer, L"Video Renderer");
 					DBGHR("g_pGraphBuilder->AddFilter");
 					// must be initalized *after* rendering the graph
@@ -941,7 +958,8 @@ void HandleKey(UINT_PTR key)
 				case 1: // VMR7
 				{
 					//printf("VMR7\n");
-					HRESULT hr = CoCreateInstance(CLSID_VideoMixingRenderer, 0, CLSCTX_INPROC_SERVER, IID_IBaseFilter, reinterpret_cast<void**>(&pRenderer));
+					hr = CoCreateInstance(CLSID_VideoMixingRenderer, 0, CLSCTX_INPROC_SERVER, IID_IBaseFilter, reinterpret_cast<void**>(&pRenderer));
+					if (FAILED(hr)) return;
 					hr = g_pGraphBuilder->AddFilter(pRenderer, L"Video Mixing Renderer");
 					DBGHR("g_pGraphBuilder->AddFilter");
 
@@ -952,7 +970,8 @@ void HandleKey(UINT_PTR key)
 				case 3: // EVR
 				{
 					//printf("EVR\n");
-					HRESULT hr = CoCreateInstance(CLSID_EnhancedVideoRenderer, 0, CLSCTX_INPROC_SERVER, IID_IBaseFilter, reinterpret_cast<void**>(&pRenderer));
+					hr = CoCreateInstance(CLSID_EnhancedVideoRenderer, 0, CLSCTX_INPROC_SERVER, IID_IBaseFilter, reinterpret_cast<void**>(&pRenderer));
+					if (FAILED(hr)) return;
 					hr = g_pGraphBuilder->AddFilter(pRenderer, L"Enhanced Video Renderer");
 					DBGHR("g_pGraphBuilder->AddFilter");
 
@@ -963,7 +982,8 @@ void HandleKey(UINT_PTR key)
 				default: // VMR9
 				{
 					//printf("VMR9\n");
-					HRESULT hr = CoCreateInstance(CLSID_VideoMixingRenderer9, 0, CLSCTX_INPROC_SERVER, IID_IBaseFilter, reinterpret_cast<void**>(&pRenderer));
+					hr = CoCreateInstance(CLSID_VideoMixingRenderer9, 0, CLSCTX_INPROC_SERVER, IID_IBaseFilter, reinterpret_cast<void**>(&pRenderer));
+					if (FAILED(hr)) return;
 					hr = g_pGraphBuilder->AddFilter(pRenderer, L"Video Mixing Renderer 9");
 					DBGHR("g_pGraphBuilder->AddFilter");
 
@@ -974,6 +994,16 @@ void HandleKey(UINT_PTR key)
 
 			hr = g_pGraphBuilder->RenderFile(ofn.lpstrFile, NULL);
 			DBGHR("g_pGraphBuilder->RenderFile");
+			if (FAILED(hr))
+			{
+				SAFE_RELEASE(g_pIVMRWindowlessControl9);
+				SAFE_RELEASE(g_pIVMRWindowlessControl);
+				SAFE_RELEASE(g_pIMFVideoDisplayControl);
+				SAFE_RELEASE(g_pVideoWindow);
+				g_pGraphBuilder->RemoveFilter(pRenderer);
+				pRenderer->Release();
+				return;
+			}
 
 			// check if renderer is connected, if not remove it
 			IPin *pPin;
@@ -1015,7 +1045,7 @@ void HandleKey(UINT_PTR key)
 	case 'U':
 	{
 		IUnknown * pUnk;
-		hr = FindFilterInterface(g_pGraphBuilder, IID_IDirectVobSub, (void**)&pUnk);
+		hr = FindFilterInterface(g_pGraphBuilder, IID_IDirectVobSub, reinterpret_cast<void**>(&pUnk));
 		if (SUCCEEDED(hr))
 		{
 			IDirectVobSub* pDirectVobSub = (IDirectVobSub*)pUnk;
@@ -1226,6 +1256,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_DESTROY:
+		g_pMediaControl->Stop();
 		PostQuitMessage(0);
 		break;
 
@@ -1387,6 +1418,24 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	//DBGHR("QueryInterface(IID_IGraphBuilder)");
 
 	//######################################
+	// Query interfaces
+	//######################################
+
+	hr = g_pGraphBuilder->QueryInterface(IID_IMediaControl, (void **)&g_pMediaControl);
+	DBGHR("QueryInterface(IID_IMediaControl)");
+	if (FAILED(hr))
+	{
+		EXIT(ERROR_NO_MEDIACONTROL);
+	}
+
+	hr = g_pGraphBuilder->QueryInterface(IID_IMediaSeeking, (void**)&g_pMediaSeeking);
+	DBGHR("QueryInterface(IID_IMediaSeeking)");
+	if (FAILED(hr))
+	{
+		EXIT(ERROR_NO_MEDIASEEKING);
+	}
+
+	//######################################
 	// Print media infos and exit
 	//######################################
 	tmp = CmdOptionGet(argv, argv + argc, L"-i");
@@ -1471,24 +1520,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (CmdOptionExists(argv, argv + argc, L"-q"))
 	{
 		g_bQuitWhenComplete = TRUE;
-	}
-
-	//######################################
-	// Query interfaces
-	//######################################
-
-	hr = g_pGraphBuilder->QueryInterface(IID_IMediaControl, (void **)&g_pMediaControl);
-	DBGHR("QueryInterface(IID_IMediaControl)");
-	if (FAILED(hr))
-	{
-		EXIT(ERROR_NO_MEDIACONTROL);
-	}
-
-	hr = g_pGraphBuilder->QueryInterface(IID_IMediaSeeking, (void**)&g_pMediaSeeking);
-	DBGHR("QueryInterface(IID_IMediaSeeking)");
-	if (FAILED(hr))
-	{
-		EXIT(ERROR_NO_MEDIASEEKING);
 	}
 
 	//######################################
@@ -1737,56 +1768,32 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 					else if (filterConf[i].find(L"qual=") == 0)
 					{
-						double q = _wtof(filterConf[i].substr(8).c_str());
+						double q = _wtof(filterConf[i].substr(5).c_str());
 						hr = SetVideoCompressionQuality(pFilter, q);
 						DBGHR("SetVideoCompressionQuality");
 					}
-
-					//TODO ////////////////////////////////////
-					//else if (filterConf[i].find(L"codec=") == 0) // 6
-					//{
-					//	//HRESULT AddFilterCodec(
-					//	//	IGraphBuilder *pGraphBuilder,
-					//	//	GUID cat_guid,
-					//	//	WCHAR *wfiltername,
-					//	//	IBaseFilter **ppF
-					//	//);
-
-					//	GUID categoryGuid;
-					//	StringToGuid(filterParts[0].c_str(), &categoryGuid); //TODO
-
-					//	hr = AddFilterCodec(g_pGraphBuilder, categoryGuid, filterConf[i].substr(6).c_str(), &pFilter);
-					//	DBGHR("AddFilterCodec");
-					//}
 		
 					if (filterConf[i].find(L"dialog") == 0)
 					{
-						hr = ShowFilterPropertyPages(pFilter, g_hWnd);
-						DBGHR("ShowFilterPropertyPages");
+						if (filterParts.size() > 1)
+						{
+							// The filter was loaded from DLL, so we also load its dialog from DLL
+							hr = ShowFilterPropertyPageDirect(pFilter, filterParts[1].c_str(), g_hWnd);
+							DBGHR("ShowFilterPropertyPageDirect");
+						}
+						else
+						{
+							hr = ShowFilterPropertyPages(pFilter, g_hWnd);
+							DBGHR("ShowFilterPropertyPages");	
+						}
 					}
 					if (filterConf[i].find(L"pindialog") == 0)
 					{
 						hr = ShowPinPropertyPages(pFilter, g_hWnd);
 						DBGHR("ShowPinPropertyPages");
 					}
-
-					//if (filterConf[i].find(L"streamconfig") == 0)
-					//{
-					//	hr = ShowPinDialog_StreamConfig(pFilter, g_hWnd);
-					//	DBGHR("ShowPinDialog_StreamConfig");
-					//}
-					//if (filterConf[i].find(L"videocompression") == 0)
-					//{
-					//	hr = ShowPinDialog_VideoCompression(pFilter, g_hWnd);
-					//	DBGHR("ShowPinDialog_VideoCompression");
-					//}
-
 				}
 			}
-
-			// find renderer
-			//hr = CheckAndInitRenderer();
-			//BOOL rendererFound = SUCCEEDED(hr);
 
 			//######################################
 			// connect-list
@@ -1934,20 +1941,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 				// Find and init renderer
 				hr = CheckAndInitRenderer(TRUE);
-
-				//BOOL rendererFound = SUCCEEDED(hr);
-				//if (!rendererFound)
-				//{
-				//	IBaseFilter * pRenderer = NULL;
-				//	hr = FindFilterByGuid(g_pGraphBuilder, CLSID_VideoRenderer, &pRenderer); // LegacyRenderer
-				//	if (SUCCEEDED(hr))
-				//	{
-				//		printf("LegacyRenderer found!\n");
-				//		hr = InitLegacyRenderer(pRenderer);
-				//		DBGHR("InitLegacyRenderer");
-				//		pRenderer->Release();
-				//	}
-				//}
 
 				g_bHasGraph = TRUE;
 			}

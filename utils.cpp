@@ -2,6 +2,8 @@
 
 #include "utils.h"
 
+#pragma comment(lib, "Comctl32.lib")
+
 extern HRESULT hr;
 extern UINT g_logLevel;
 
@@ -113,21 +115,17 @@ HRESULT LoadGraphFile(IGraphBuilder *pGraph, const WCHAR* wszName)
     {
         return E_FAIL;
     }
-    hr = StgOpenStorage(wszName, 0, 
-        STGM_TRANSACTED | STGM_READ | STGM_SHARE_DENY_WRITE, 
-        0, 0, &pStorage);
+    hr = StgOpenStorage(wszName, 0, STGM_TRANSACTED | STGM_READ | STGM_SHARE_DENY_WRITE, 0, 0, &pStorage);
     if (FAILED(hr))
     {
         return hr;
     }
-    IPersistStream *pPersistStream = 0;
-    hr = pGraph->QueryInterface(IID_IPersistStream,
-             reinterpret_cast<void**>(&pPersistStream));
+    IPersistStream *pPersistStream = NULL;
+    hr = pGraph->QueryInterface(IID_IPersistStream, reinterpret_cast<void**>(&pPersistStream));
     if (SUCCEEDED(hr))
     {
-        IStream *pStream = 0;
-        hr = pStorage->OpenStream(L"ActiveMovieGraph", 0, 
-            STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &pStream);
+        IStream *pStream = NULL;
+        hr = pStorage->OpenStream(L"ActiveMovieGraph", 0, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &pStream);
         if(SUCCEEDED(hr))
         {
             hr = pPersistStream->Load(pStream);
@@ -148,20 +146,14 @@ HRESULT SaveGraphFile(IGraphBuilder *pGraph, const WCHAR *wszPath)
 
     const WCHAR wszStreamName[] = L"ActiveMovieGraph"; 
     IStorage *pStorage = NULL;
-    hr = StgCreateDocfile(
-        wszPath,
-        STGM_CREATE | STGM_TRANSACTED | STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
-        0, &pStorage);
+    hr = StgCreateDocfile(wszPath, STGM_CREATE | STGM_TRANSACTED | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, &pStorage);
     if(FAILED(hr)) 
     {
         return hr;
     }
 
     IStream *pStream;
-    hr = pStorage->CreateStream(
-        wszStreamName,
-        STGM_WRITE | STGM_CREATE | STGM_SHARE_EXCLUSIVE,
-        0, 0, &pStream);
+    hr = pStorage->CreateStream(wszStreamName, STGM_WRITE | STGM_CREATE | STGM_SHARE_EXCLUSIVE, 0, 0, &pStream);
     if (FAILED(hr)) 
     {
         pStorage->Release();    
@@ -389,7 +381,7 @@ HRESULT GetUnconnectedPin(
 		pPin->QueryDirection(&ThisPinDir);
 		if (ThisPinDir == PinDir)
 		{
-			IPin *pTmp = 0;
+			IPin *pTmp = NULL;
 			hr = pPin->ConnectedTo(&pTmp);
 			if (SUCCEEDED(hr)) // Already connected - not the pin we want
 			{
@@ -450,7 +442,7 @@ HRESULT GetConnectedPins(
 		pPin->QueryDirection(&ThisPinDir);
 		if (ThisPinDir == PinDir)
 		{
-			IPin *pTmp = 0;
+			IPin *pTmp = NULL;
 			hr = pPin->ConnectedTo(&pTmp);
 			if (SUCCEEDED(hr))  // connected - the pins we want
 			{
@@ -491,46 +483,38 @@ HRESULT ShowFilterPropertyPages(IBaseFilter *pFilter, HWND hWnd)
 {
 	if (!pFilter) return E_POINTER;
 
-	ISpecifyPropertyPages *pProp;
-	hr = pFilter->QueryInterface(IID_ISpecifyPropertyPages, (void **)&pProp);
+	ISpecifyPropertyPages *pSpecifyPropertyPages;
+	hr = pFilter->QueryInterface(IID_ISpecifyPropertyPages, reinterpret_cast<void**>(&pSpecifyPropertyPages));
+	if (FAILED(hr)) return hr;
 
-	if (SUCCEEDED(hr))
-	{
-		// Get the filter's name and IUnknown pointer.
-		FILTER_INFO FilterInfo;
-		hr = pFilter->QueryFilterInfo(&FilterInfo);
-		DBGHR("pFilter->QueryFilterInfo");
+	// Get the filter's name and IUnknown pointer.
+	FILTER_INFO FilterInfo;
+	hr = pFilter->QueryFilterInfo(&FilterInfo);
+	DBGHR("pFilter->QueryFilterInfo");
 
-		IUnknown *pFilterUnk;
+	IUnknown *pFilterUnk = reinterpret_cast<IUnknown*>(pFilter);
 
-		//hr = pFilter->QueryInterface(IID_IUnknown, (void **)&pFilterUnk); // WRONG!!!
-		//DBGHR("pFilter->QueryInterface IID_IUnknown");
+	// Show the page. 
+	CAUUID caGUID;
+	pSpecifyPropertyPages->GetPages(&caGUID);
 
-		pFilterUnk = (IUnknown *)pFilter;
+	hr = OleCreatePropertyFrame(
+		hWnd,                   // Parent window
+		0, 0,                   // Reserved
+		FilterInfo.achName,     // Caption for the dialog box
+		1,                      // # of objects (just the filter)
+		&pFilterUnk,            // Array of object pointers. 
+		caGUID.cElems,          // Number of property pages
+		caGUID.pElems,          // Array of property page CLSIDs
+		0,                      // Locale identifier
+		0, NULL                 // Reserved
+	);
+	DBGHR("pFilter->OleCreatePropertyFrame");
 
-		// Show the page. 
-		CAUUID caGUID;
-		pProp->GetPages(&caGUID);
-
-		hr = OleCreatePropertyFrame(
-			hWnd,                   // Parent window
-			0, 0,                   // Reserved
-			FilterInfo.achName,     // Caption for the dialog box
-			1,                      // # of objects (just the filter)
-			&pFilterUnk,            // Array of object pointers. 
-			caGUID.cElems,          // Number of property pages
-			caGUID.pElems,          // Array of property page CLSIDs
-			0,                      // Locale identifier
-			0, NULL                 // Reserved
-		);
-		DBGHR("pFilter->OleCreatePropertyFrame");
-
-		// Clean up
-		pProp->Release();
-		pFilterUnk->Release();
-		FilterInfo.pGraph->Release();
-		CoTaskMemFree(caGUID.pElems);
-	}
+	// Clean up
+	pSpecifyPropertyPages->Release();
+	FilterInfo.pGraph->Release();
+	CoTaskMemFree(caGUID.pElems);
 
 	//if (FAILED(hr))
 	//{
@@ -564,6 +548,60 @@ HRESULT ShowFilterPropertyPages(IBaseFilter *pFilter, HWND hWnd)
 	return hr;
 }
 
+extern "C" {
+	HRESULT WINAPI OleCreatePropertyFrameDirect(
+		HWND hwndOwner,
+		LPCOLESTR lpszCaption,
+		LPUNKNOWN* ppUnk,
+		IPropertyPage * page);
+}
+
+//######################################
+//
+//######################################
+HRESULT ShowFilterPropertyPageDirect(IBaseFilter *pFilter, const WCHAR *pPath, HWND hwnd)
+{
+	if (!pFilter) return E_POINTER;
+
+	ISpecifyPropertyPages *pSpecifyPropertyPages;
+	hr = pFilter->QueryInterface(IID_ISpecifyPropertyPages, reinterpret_cast<void**>(&pSpecifyPropertyPages));
+	if (FAILED(hr)) return hr;
+
+	// Get the filter's name
+	FILTER_INFO FilterInfo;
+	hr = pFilter->QueryFilterInfo(&FilterInfo);
+	DBGHR("pFilter->QueryFilterInfo");
+
+	// Show the first page. 
+	CAUUID caGUID;
+	hr = pSpecifyPropertyPages->GetPages(&caGUID);
+	DBGHR("pSpecifyPropertyPages->GetPages");
+
+	if (SUCCEEDED(hr) && caGUID.cElems > 0)
+	{
+		IUnknownPtr pUnk;
+		hr = CreateObjectFromPath(pPath, caGUID.pElems[0], &pUnk);
+		if (SUCCEEDED(hr))
+		{
+			IPropertyPagePtr pPage = pUnk;
+			hr = OleCreatePropertyFrameDirect(
+				hwnd,					// Parent window
+				FilterInfo.achName,		// Caption for the dialog box
+				(IUnknown **)&pFilter,  // Pointer to the filter
+				pPage
+			);
+			DBGHR("OleCreatePropertyFrameDirect");
+		}
+	}
+
+	// Clean up
+	pSpecifyPropertyPages->Release();
+	FilterInfo.pGraph->Release();
+	CoTaskMemFree(caGUID.pElems);
+
+	return hr;
+}
+
 //######################################
 // 
 //######################################
@@ -577,7 +615,7 @@ HRESULT SetVideoCompressionQuality(IBaseFilter *pFilter, double q)
 	if (FAILED(hr)) return hr;
 
 	IAMVideoCompression * pVideoCompression;
-	hr = pPin->QueryInterface(IID_IAMVideoCompression, (void**)&pVideoCompression);
+	hr = pPin->QueryInterface(IID_IAMVideoCompression, reinterpret_cast<void**>(&pVideoCompression));
 	DBGHR("pPin->IID_IAMVideoCompression");
 	if (SUCCEEDED(hr))
 	{
@@ -614,7 +652,7 @@ HRESULT ShowPinPropertyPages(IBaseFilter *pFilter, HWND hWnd)
 			if (ThisPinDir == PINDIR_OUTPUT)
 			{
 				ISpecifyPropertyPages *pPinProp;
-				hr = pPin->QueryInterface(IID_ISpecifyPropertyPages, (void **)&pPinProp);
+				hr = pPin->QueryInterface(IID_ISpecifyPropertyPages, reinterpret_cast<void**>(&pPinProp));
 				if (SUCCEEDED(hr))
 				{
 					// Get the pins's name and IUnknown pointer.
@@ -622,8 +660,7 @@ HRESULT ShowPinPropertyPages(IBaseFilter *pFilter, HWND hWnd)
 					hr = pFilter->QueryFilterInfo(&FilterInfo);
 
 					IUnknown *pFilterUnk;
-
-					pPin->QueryInterface(IID_IUnknown, (void **)&pFilterUnk);
+					pPin->QueryInterface(IID_IUnknown, reinterpret_cast<void**>(&pFilterUnk));
 
 					// Show the page. 
 					CAUUID caGUID;
@@ -668,7 +705,7 @@ HRESULT FindRegFilterByGUID(WCHAR *wfiltername, GUID guid)
 	IEnumRegFilters	*pEnumRegFilters = NULL;
 	REGFILTER *pRegFilter;
 
-	hr = CoCreateInstance(CLSID_FilterMapper, NULL, CLSCTX_INPROC_SERVER, IID_IFilterMapper, (LPVOID*)&pFilterMapper);
+	hr = CoCreateInstance(CLSID_FilterMapper, NULL, CLSCTX_INPROC_SERVER, IID_IFilterMapper, reinterpret_cast<void**>(&pFilterMapper));
 	if (FAILED(hr)) return hr;
 
 	hr = pFilterMapper->EnumMatchingFilters(&pEnumRegFilters, 0, FALSE, GUID_NULL, GUID_NULL, FALSE, FALSE, GUID_NULL, GUID_NULL);
@@ -756,7 +793,7 @@ HRESULT CreateObjectFromPath(const WCHAR * pPath, REFCLSID clsid, IUnknown** ppU
 
 	// create a class factory
 	IUnknownPtr pUnk;
-	hr = fn(clsid, IID_IUnknown, (void**)(IUnknown**)&pUnk);
+	hr = fn(clsid, IID_IUnknown, reinterpret_cast<void**>(&pUnk)); // was (void**)(IUnknown**)&pUnk)
 	if (SUCCEEDED(hr))
 	{
 		IClassFactoryPtr pCF = pUnk;
@@ -767,12 +804,58 @@ HRESULT CreateObjectFromPath(const WCHAR * pPath, REFCLSID clsid, IUnknown** ppU
 		else
 		{
 			// ask the class factory to create the object
-			hr = pCF->CreateInstance(NULL, IID_IUnknown, (void**)ppUnk);
+			hr = pCF->CreateInstance(NULL, IID_IUnknown, reinterpret_cast<void**>(ppUnk));
 		}
 	}
 
+
+	//// test
+	//IUnknownPtr pUnk2;
+	//hr = fn(CLSID_ScreenCamPropertyPage, IID_IUnknown, reinterpret_cast<void**>(&pUnk2));
+	//if (SUCCEEDED(hr))
+	//{
+	//	printf("YO!\n");
+	//	//IClassFactoryPtr pCF = pUnk;
+	//	//if (pCF == NULL)
+	//	//{
+	//	//	hr = E_NOINTERFACE;
+	//	//}
+	//	//else
+	//	//{
+	//	//	// ask the class factory to create the object
+	//	//	hr = pCF->CreateInstance(NULL, IID_IUnknown, reinterpret_cast<void**>(ppUnk));
+	//	//}
+	//}
+
 	return hr;
 }
+
+//	def _create_object_from_path (self, clsid, dll_filename, interface=IBaseFilter):
+//		iclassfactory = self._raw_guid(IClassFactory._iid_)
+//		my_dll = oledll.LoadLibrary(dll_filename)
+//		factory_ptr = c_void_p(0)
+
+//		hr = my_dll.DllGetClassObject(self._raw_guid(clsid), iclassfactory, byref(factory_ptr))
+//		if hr!=S_OK:
+//			raise COMError(hr, '', '')
+//		ptr_icf = POINTER(IClassFactory)(factory_ptr.value)
+//		unk = ptr_icf.CreateInstance()
+//
+//		# if ScreenCam or SpoutCam is loaded from local file, we also grab its property page
+//		if clsid==CLSID_ScreenCam or clsid==CLSID_SpoutCam:
+//			factory_ptr = c_void_p(0)
+
+//			hr = my_dll.DllGetClassObject(
+//					self._raw_guid(CLSID_SpoutCamPropertyPage if clsid==CLSID_SpoutCam else CLSID_ScreenCamPropertyPage),
+//					iclassfactory,
+//					byref(factory_ptr))
+//			if hr!=S_OK:
+//				raise COMError(hr, '', '')
+//			ptr_icf = POINTER(IClassFactory)(factory_ptr.value)
+//			unk2 = ptr_icf.CreateInstance()
+//			self._page = unk2.QueryInterface(IPropertyPage)
+//		return unk.QueryInterface(interface)
+
 
 //######################################
 //
@@ -813,7 +896,7 @@ HRESULT AddFilterByCLSIDAndPath(
 HRESULT GetCodecName(IMoniker* pMoniker, WCHAR* wszCodecName)
 {
 	IPropertyBag *pPropertyBag = NULL;
-	hr = pMoniker->BindToStorage(NULL, NULL, IID_IPropertyBag, (void**)&pPropertyBag);
+	hr = pMoniker->BindToStorage(NULL, NULL, IID_IPropertyBag, reinterpret_cast<void**>(&pPropertyBag));
 	if (SUCCEEDED(hr))
 	{
 		VARIANT var;
@@ -835,7 +918,7 @@ HRESULT FindCodecByName(IMoniker** ppMoniker, GUID cat_guid, const WCHAR* wszCod
 	IMoniker * pMoniker = NULL;
 
 	// System Device Enumerator
-	hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER, IID_ICreateDevEnum, (void**)&pSysDevEnum);
+	hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER, IID_ICreateDevEnum, reinterpret_cast<void**>(&pSysDevEnum));
 	if (FAILED(hr))	return hr;
 
 	// Moniker Enumerator
@@ -885,7 +968,7 @@ HRESULT AddFilterCodec(
 	hr = FindCodecByName(&pMoniker, cat_guid, wfiltername);
 	if (FAILED(hr))	return hr;
 	// Retrieve the IBaseFilter
-	hr = pMoniker->BindToObject(NULL, NULL, IID_IBaseFilter, (void**)&pBaseFilter);
+	hr = pMoniker->BindToObject(NULL, NULL, IID_IBaseFilter, reinterpret_cast<void**>(&pBaseFilter));
 	pMoniker->Release(); // ???
 	if (FAILED(hr))	return hr;
 	hr = pGraphBuilder->AddFilter(pBaseFilter, wfiltername);
@@ -912,10 +995,10 @@ HRESULT AddFilterDMO(
 {
 	if (!pGraph || !ppF) return E_POINTER;
 	
-	*ppF = 0;
+	*ppF = NULL;
 	IBaseFilter *pBaseFilter = NULL;
 
-	hr = CoCreateInstance(CLSID_DMOWrapperFilter, NULL, CLSCTX_INPROC, IID_IBaseFilter, (void**)&pBaseFilter);
+	hr = CoCreateInstance(CLSID_DMOWrapperFilter, NULL, CLSCTX_INPROC, IID_IBaseFilter, reinterpret_cast<void**>(&pBaseFilter));
 	if (SUCCEEDED(hr))
 	{
 		IDMOWrapperFilter *pWrapperFilter;
@@ -1065,10 +1148,7 @@ HRESULT FindFilterInterface(
 	void **ppUnk           // Receives the interface pointer.
 )
 {
-	if (!pGraph || !ppUnk)
-	{
-		return E_POINTER;
-	}
+	if (!pGraph || !ppUnk) return E_POINTER;
 
 	HRESULT hr = S_OK;
 	bool bFound = false;

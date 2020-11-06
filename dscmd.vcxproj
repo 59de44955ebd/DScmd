@@ -178,6 +178,7 @@ $(SolutionDir)helper\editbin.exe /subsystem:console release\$(Platform)\$(Target
   <ItemGroup>
     <ClCompile Include="dscmd.cpp" />
     <ClCompile Include="error.cpp" />
+    <ClCompile Include="olepropframe.c" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
