@@ -184,10 +184,12 @@ LONG WINAPI GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
  * Custom function by Valentin Schmidt, based on Wine's OleCreatePropertyFrame implementation
  */
 HRESULT WINAPI OleCreatePropertyFrameDirect(
-	HWND hwndOwner, 
-	LPCOLESTR lpszCaption, 
-	LPUNKNOWN* ppUnk, 
-	IPropertyPage * page)
+	HWND hwndOwner,
+	LPCOLESTR lpszCaption,
+	LPUNKNOWN* ppUnk,
+	IPropertyPage ** page,
+	ULONG cPages
+)
 {
 	static const WCHAR comctlW[] = { 'c','o','m','c','t','l','3','2','.','d','l','l',0 };
 	PROPSHEETHEADERW property_sheet;
@@ -209,6 +211,7 @@ HRESULT WINAPI OleCreatePropertyFrameDirect(
 	LOGFONTW font_desc;
 	HFONT hfont;
 	LONG font_width = 4, font_height = 8;
+
 	hdc = GetDC(NULL);
 	hcomctl = LoadLibraryW(comctlW);
 	if (hcomctl)
@@ -261,9 +264,9 @@ HRESULT WINAPI OleCreatePropertyFrameDirect(
 		property_sheet.pszCaption = lpszCaption;
 	}
 
-	property_sheet.u3.phpage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(HPROPSHEETPAGE));
+	property_sheet.u3.phpage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cPages * sizeof(HPROPSHEETPAGE));
 
-	dialogs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*dialogs));
+	dialogs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cPages * sizeof(*dialogs));
 	if (!property_sheet.u3.phpage || !dialogs)
 	{
 		HeapFree(GetProcessHeap(), 0, property_sheet.u3.phpage);
@@ -277,32 +280,36 @@ HRESULT WINAPI OleCreatePropertyFrameDirect(
 
 	property_sheet_page.pfnDlgProc = property_sheet_proc;
 
-	PROPPAGEINFO page_info;
-	property_page_site = HeapAlloc(GetProcessHeap(), 0, sizeof(PropertyPageSite));
-	if (!property_page_site)
-		goto done;
+	for (ULONG i = 0; i < cPages; i++)
+	{
+		PROPPAGEINFO page_info;
+		property_page_site = HeapAlloc(GetProcessHeap(), 0, sizeof(PropertyPageSite));
+		if (!property_page_site)
+			goto done;
 
-	property_page_site->IPropertyPageSite_iface.lpVtbl = &PropertyPageSiteVtbl;
-	property_page_site->ref = 1;
-	property_page_site->lcid = 0;
+		property_page_site->IPropertyPageSite_iface.lpVtbl = &PropertyPageSiteVtbl;
+		property_page_site->ref = 1;
+		property_page_site->lcid = 0;
 
-	res = IPropertyPage_SetPageSite(page, &property_page_site->IPropertyPageSite_iface);
-	IPropertyPageSite_Release(&property_page_site->IPropertyPageSite_iface);
-	if (FAILED(res))
-		goto done;
+		res = IPropertyPage_SetPageSite(page[i], &property_page_site->IPropertyPageSite_iface);
+		IPropertyPageSite_Release(&property_page_site->IPropertyPageSite_iface);
+		if (FAILED(res))
+			continue;
 
-	res = IPropertyPage_SetObjects(page, 1, ppUnk);
-	res = IPropertyPage_GetPageInfo(page, &page_info);
-	if (FAILED(res))
-		goto done;
+		res = IPropertyPage_SetObjects(page[i], 1, ppUnk);
+		res = IPropertyPage_GetPageInfo(page[i], &page_info);
+		if (FAILED(res))
+			continue;
 
-	dialogs[0].template.cx = MulDiv(page_info.size.cx, 4, font_width);
-	dialogs[0].template.cy = MulDiv(page_info.size.cy, 8, font_height);
+		dialogs[i].template.cx = MulDiv(page_info.size.cx, 4, font_width);
+		dialogs[i].template.cy = MulDiv(page_info.size.cy, 8, font_height);
 
-	property_sheet_page.u.pResource = &dialogs[0].template;
-	property_sheet_page.lParam = (LPARAM)page;
-	property_sheet_page.pszTitle = page_info.pszTitle;
-	property_sheet.u3.phpage[property_sheet.nPages++] = CreatePropertySheetPageW(&property_sheet_page);
+		property_sheet_page.u.pResource = &dialogs[i].template;
+		property_sheet_page.lParam = (LPARAM)page[i];
+		property_sheet_page.pszTitle = page_info.pszTitle;
+		property_sheet.u3.phpage[property_sheet.nPages++] = CreatePropertySheetPageW(&property_sheet_page);
+	}
+
 	PropertySheetW(&property_sheet);
 
 done:

@@ -229,7 +229,7 @@ HRESULT ShowFilterPropertyPages(
 	HWND hWnd = NULL
 );
 
-HRESULT ShowFilterPropertyPageDirect(
+HRESULT ShowFilterPropertyPagesDLL(
 	IBaseFilter *pFilter,
 	const WCHAR *pPath,
 	HWND hWnd = NULL

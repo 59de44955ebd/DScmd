@@ -553,13 +553,15 @@ extern "C" {
 		HWND hwndOwner,
 		LPCOLESTR lpszCaption,
 		LPUNKNOWN* ppUnk,
-		IPropertyPage * page);
+		IPropertyPage ** page,
+		ULONG cPages
+	);
 }
 
 //######################################
 //
 //######################################
-HRESULT ShowFilterPropertyPageDirect(IBaseFilter *pFilter, const WCHAR *pPath, HWND hwnd)
+HRESULT ShowFilterPropertyPagesDLL(IBaseFilter *pFilter, const WCHAR *pPath, HWND hwnd)
 {
 	if (!pFilter) return E_POINTER;
 
@@ -572,29 +574,34 @@ HRESULT ShowFilterPropertyPageDirect(IBaseFilter *pFilter, const WCHAR *pPath, H
 	hr = pFilter->QueryFilterInfo(&FilterInfo);
 	DBGHR("pFilter->QueryFilterInfo");
 
-	// Show the first page. 
+	// Get the pages
 	CAUUID caGUID;
 	hr = pSpecifyPropertyPages->GetPages(&caGUID);
 	DBGHR("pSpecifyPropertyPages->GetPages");
 
-	if (SUCCEEDED(hr) && caGUID.cElems > 0)
+	IPropertyPagePtr * ppPages = new IPropertyPagePtr[caGUID.cElems];
+
+	for (ULONG i = 0; i < caGUID.cElems; i++)
 	{
 		IUnknownPtr pUnk;
-		hr = CreateObjectFromPath(pPath, caGUID.pElems[0], &pUnk);
-		if (SUCCEEDED(hr))
-		{
-			IPropertyPagePtr pPage = pUnk;
-			hr = OleCreatePropertyFrameDirect(
-				hwnd,					// Parent window
-				FilterInfo.achName,		// Caption for the dialog box
-				(IUnknown **)&pFilter,  // Pointer to the filter
-				pPage
-			);
-			DBGHR("OleCreatePropertyFrameDirect");
-		}
+		hr = CreateObjectFromPath(pPath, caGUID.pElems[i], &pUnk);
+		if (FAILED(hr)) 
+			goto done;
+		ppPages[i] = pUnk;
 	}
 
+	hr = OleCreatePropertyFrameDirect(
+		hwnd,					// Parent window
+		FilterInfo.achName,		// Caption for the dialog box
+		(IUnknown **)&pFilter,  // Pointer to the filter
+		(IPropertyPage **)ppPages,
+		caGUID.cElems
+	);
+	DBGHR("OleCreatePropertyFrameDirect2");
+
 	// Clean up
+done:
+	delete[] ppPages;
 	pSpecifyPropertyPages->Release();
 	FilterInfo.pGraph->Release();
 	CoTaskMemFree(caGUID.pElems);
@@ -807,26 +814,6 @@ HRESULT CreateObjectFromPath(const WCHAR * pPath, REFCLSID clsid, IUnknown** ppU
 			hr = pCF->CreateInstance(NULL, IID_IUnknown, reinterpret_cast<void**>(ppUnk));
 		}
 	}
-
-
-	//// test
-	//IUnknownPtr pUnk2;
-	//hr = fn(CLSID_ScreenCamPropertyPage, IID_IUnknown, reinterpret_cast<void**>(&pUnk2));
-	//if (SUCCEEDED(hr))
-	//{
-	//	printf("YO!\n");
-	//	//IClassFactoryPtr pCF = pUnk;
-	//	//if (pCF == NULL)
-	//	//{
-	//	//	hr = E_NOINTERFACE;
-	//	//}
-	//	//else
-	//	//{
-	//	//	// ask the class factory to create the object
-	//	//	hr = pCF->CreateInstance(NULL, IID_IUnknown, reinterpret_cast<void**>(ppUnk));
-	//	//}
-	//}
-
 	return hr;
 }
 

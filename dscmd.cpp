@@ -1790,7 +1790,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 						if (filterParts.size() > 1)
 						{
 							// The filter was loaded from DLL, so we also load its dialog from DLL
-							hr = ShowFilterPropertyPageDirect(pFilter, filterParts[1].c_str(), g_hWnd);
+							hr = ShowFilterPropertyPagesDLL(pFilter, filterParts[1].c_str(), g_hWnd);
 							DBGHR("ShowFilterPropertyPageDirect");
 						}
 						else

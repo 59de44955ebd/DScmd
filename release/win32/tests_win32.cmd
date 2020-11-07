@@ -8,8 +8,7 @@ set PATH=%FILTER_DIR%;%PATH%
 :: import CLSID constants
 call ..\__clsid.inc.cmd
 
-echo Running tests for dscmd.exe - Win32 (32-bit)
-echo.
+..\..\helper\bg Print E "\nRunning tests for dscmd.exe - Win32 (32-bit)\n\n"
 
 :: run all tests
 call ..\__tests.cmd
