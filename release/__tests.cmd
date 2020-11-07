@@ -17,7 +17,7 @@ call:test_mp4_lav_render_pin
 call:test_mp4_lav_full_graph
 call:test_transcode_avi_compressor_name
 call:test_transcode_avi_compressor_clsid
-::call:test_transcode_to_mp3
+call:test_transcode_to_mp3
 call:test_transcode_to_wav
 call:test_transcode_to_wmv
 call:test_dmo_audio_effect
@@ -175,12 +175,12 @@ exit /b
 :: Transcode MP4 to MP3
 ::######################################
 :test_transcode_to_mp3
-dscmd -v 0 -nw -q -stop 500 -nc ^
+dscmd -v 0 -nw -q ^
 -g ^
-%CLSID_LAVSplitterSource%=%FILTER_DIR%\LAVSplitter.ax;src=%ASSETS_DIR%\bbb_360p_10sec.mp4,^
-%CLSID_LAVAudioDecoder%=%FILTER_DIR%\LAVAudio.ax,^
-%CLSID_AudioCompressorCategory%="MPEG Layer-3",^
-%CLSID_Dump%=%FILTER_DIR%\Dump.dll;dest=output.mp3!^
+%CLSID_AsyncReader%;src=%ASSETS_DIR%\test.wav,^
+%CLSID_WaveParser%,^
+%CLSID_LAMEAudioEncoder%=%FILTER_DIR%\lame.ax,^
+%CLSID_FileWriter%;dest=output.mp3!^
 0:1,1:2,2:3
 call:assert %ERRORLEVEL% "Transcode to MP3"
 del output.mp3 2>nul

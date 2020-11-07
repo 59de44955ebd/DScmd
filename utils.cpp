@@ -1098,6 +1098,7 @@ const WCHAR * GetKnownFilterName(GUID clsid)
 	if (clsid == CLSID_DirectVobSubAutoload) return L"VSFilter (auto-loading version)";
 	if (clsid == CLSID_SpoutCam) return L"SpoutCam";
 	if (clsid == CLSID_ScreenCam) return L"ScreenCam";
+	if (clsid == CLSID_LAMEDShowFilter) return L"LAME Audio Encoder";
 	return NULL;
 }
 
